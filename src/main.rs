@@ -11,12 +11,14 @@ fn main() {
     let hundred = Expr::Value(100);
     let ab = Expr::list(vec![Expr::lvar("a"), Expr::lvar("b")]);
     let nums = Expr::List(vec![forty_two.clone(), hundred.clone()]);
+    let more_nums = Expr::List(vec![forty_two.clone(), forty_two.clone(),hundred.clone()]);
     let mixed1 = Expr::List(vec![forty_two.clone(), a.clone(), hundred.clone()]);
     let mixed2 = Expr::List(vec![b.clone(), Expr::list(vec![Expr::Value(666), Expr::Value(666)]), hundred.clone()]);
 
     run(&a, &a);
     run(&a, &b);
     run(&a, &forty_two);
+    run(&ab, &more_nums);
     run(&hundred, &forty_two);
     run(&ab, &nums);
     run(&mixed1, &mixed2);
@@ -86,7 +88,7 @@ fn unify<T : Clone + Eq + Display + Debug>(a: &Expr<T>, b: &Expr<T>, unification
 
 fn unify_lists<T : Clone + Eq + Debug + Display>(list_a: &Vec<Expr<T>>, list_b: &Vec<Expr<T>>, bindings: Bindings<T>) -> Unification<T> {
     if list_a.len() != list_b.len() {
-        Err(format!("Can't unify {:?} with {:?}, lists are different length", list_a, list_b))
+        Err(format!("Can't unify {} with {} (different length)", Expr::List(list_a.clone()), Expr::List(list_b.clone())))
     }
     else {
         let mut current_bindings = bindings;
