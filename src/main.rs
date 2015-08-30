@@ -25,7 +25,7 @@ fn main() {
 
 fn run<T : Debug + Eq + Clone + Display>(a: Expr<T>, b: Expr<T>) {
     println!("Unifying {} with {} => {}", a.clone(), b.clone(), match unify(a, b, empty()) {
-        Ok(bindings) => format!("{:?}", bindings),
+        Ok(bindings) => bindings_to_string(&bindings),
         Err(msg) => msg
     });
 }
@@ -104,5 +104,12 @@ fn extend_bindings<T : Clone>(bindings: Bindings<T>, name: String, expr: Expr<T>
     let mut new_bindings = bindings.clone();
     new_bindings.insert(name, expr);
     return new_bindings;
+}
+
+fn bindings_to_string<T : Display + Debug>(bindings: &HashMap<String,Expr<T>>) -> String {
+    let bindings_strings : Vec<String> = bindings.iter().map(|(k,v)| format!("{}: {}", k, v)).collect();
+    let all_bindings = bindings_strings.connect(", ");
+    let result = format!("{{ {} }}", all_bindings);
+    return result;
 }
 
