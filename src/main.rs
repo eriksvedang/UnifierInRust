@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use std::collections::HashMap;
-use std::fmt::Debug;
+use std::fmt::{Debug,Display,Formatter};
 
 fn main() {
 
@@ -23,8 +23,11 @@ fn main() {
     
 }
 
-fn run<T : Debug + Eq + Clone>(a: Expr<T>, b: Expr<T>) {
-    println!("Unifying {:?} with {:?} => {:?}", a.clone(), b.clone(), unify(a, b, empty()));
+fn run<T : Debug + Eq + Clone + Display>(a: Expr<T>, b: Expr<T>) {
+    println!("Unifying {} with {} => {}", a.clone(), b.clone(), match unify(a, b, empty()) {
+        Ok(bindings) => format!("{:?}", bindings),
+        Err(msg) => msg
+    });
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,6 +49,19 @@ impl<T> Expr<T> {
     }
 }
 
+impl<T : Display + Debug> Display for Expr<T> {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        match self {
+            &Expr::LVar(ref name) => write!(f, "{}", name),
+            &Expr::Value(ref value) => write!(f, "{}", value),
+            &Expr::List(ref expressions) => {
+                let expressions_strings : Vec<String> = expressions.iter().map(|e| format!("{}", e)).collect();
+                write!(f, "[{}]", expressions_strings.connect(", "))
+            }
+        }
+    }
+}
+
 type Bindings<T> = HashMap<String,Expr<T>>;
 type Unification<T> = Result<Bindings<T>, String>;
 
@@ -53,7 +69,7 @@ fn empty<T>() -> Unification<T> {
     Ok(HashMap::new())
 }
     
-fn unify<T : Clone + Eq + Debug>(a: Expr<T>, b: Expr<T>, unification: Unification<T>) -> Unification<T> {
+fn unify<T : Clone + Eq + Display + Debug>(a: Expr<T>, b: Expr<T>, unification: Unification<T>) -> Unification<T> {
     match unification {
         Err(msg) => Err(msg),
         Ok(bindings) => {
@@ -62,13 +78,13 @@ fn unify<T : Clone + Eq + Debug>(a: Expr<T>, b: Expr<T>, unification: Unificatio
                 (Expr::LVar(name), expr) => Ok(extend_bindings(bindings, name, expr)),
                 (expr, Expr::LVar(name)) => Ok(extend_bindings(bindings, name, expr)),
                 (Expr::List(list_a), Expr::List(list_b)) => unify_lists(list_a, list_b, bindings),
-                _ => Err(format!("Can't unify {:?} with {:?}.", a, b))
+                _ => Err(format!("Can't unify {} with {}.", a, b))
             }
         }
     }
 }
 
-fn unify_lists<T : Clone + Eq + Debug>(list_a: Vec<Expr<T>>, list_b: Vec<Expr<T>>, bindings: Bindings<T>) -> Unification<T> {
+fn unify_lists<T : Clone + Eq + Debug + Display>(list_a: Vec<Expr<T>>, list_b: Vec<Expr<T>>, bindings: Bindings<T>) -> Unification<T> {
     if list_a.len() != list_b.len() {
         Err(format!("Can't unify {:?} with {:?}, lists are different length", list_a, list_b))
     }
