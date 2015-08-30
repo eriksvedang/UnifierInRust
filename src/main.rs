@@ -14,17 +14,17 @@ fn main() {
     let mixed1 = Expr::List(vec![forty_two.clone(), a.clone(), hundred.clone()]);
     let mixed2 = Expr::List(vec![b.clone(), Expr::list(vec![Expr::Value(666), Expr::Value(666)]), hundred.clone()]);
 
-    run(a.clone(), a.clone());
-    run(a.clone(), b.clone());
-    run(a.clone(), forty_two.clone());
-    run(hundred.clone(), forty_two.clone());
-    run(ab.clone(), nums.clone());
-    run(mixed1.clone(), mixed2.clone());
+    run(&a, &a);
+    run(&a, &b);
+    run(&a, &forty_two);
+    run(&hundred, &forty_two);
+    run(&ab, &nums);
+    run(&mixed1, &mixed2);
     
 }
 
-fn run<T : Debug + Eq + Clone + Display>(a: Expr<T>, b: Expr<T>) {
-    println!("Unifying {} with {} => {}", a.clone(), b.clone(), match unify(a, b, empty()) {
+fn run<T : Debug + Eq + Clone + Display>(a: &Expr<T>, b: &Expr<T>) {
+    println!("Unifying {} with {} => {}", &a, &b, match unify(&a, &b, empty()) {
         Ok(bindings) => bindings_to_string(&bindings),
         Err(msg) => msg
     });
@@ -69,7 +69,7 @@ fn empty<T>() -> Unification<T> {
     Ok(HashMap::new())
 }
     
-fn unify<T : Clone + Eq + Display + Debug>(a: Expr<T>, b: Expr<T>, unification: Unification<T>) -> Unification<T> {
+fn unify<T : Clone + Eq + Display + Debug>(a: &Expr<T>, b: &Expr<T>, unification: Unification<T>) -> Unification<T> {
     match unification {
         Err(msg) => Err(msg),
         Ok(bindings) => {
@@ -77,21 +77,21 @@ fn unify<T : Clone + Eq + Display + Debug>(a: Expr<T>, b: Expr<T>, unification: 
                 _ if a == b => Ok(bindings),
                 (Expr::LVar(name), expr) => Ok(extend_bindings(bindings, name, expr)),
                 (expr, Expr::LVar(name)) => Ok(extend_bindings(bindings, name, expr)),
-                (Expr::List(list_a), Expr::List(list_b)) => unify_lists(list_a, list_b, bindings),
+                (Expr::List(list_a), Expr::List(list_b)) => unify_lists(&list_a, &list_b, bindings),
                 _ => Err(format!("Can't unify {} with {}.", a, b))
             }
         }
     }
 }
 
-fn unify_lists<T : Clone + Eq + Debug + Display>(list_a: Vec<Expr<T>>, list_b: Vec<Expr<T>>, bindings: Bindings<T>) -> Unification<T> {
+fn unify_lists<T : Clone + Eq + Debug + Display>(list_a: &Vec<Expr<T>>, list_b: &Vec<Expr<T>>, bindings: Bindings<T>) -> Unification<T> {
     if list_a.len() != list_b.len() {
         Err(format!("Can't unify {:?} with {:?}, lists are different length", list_a, list_b))
     }
     else {
         let mut current_bindings = bindings;
         for i in 0..list_a.len() {
-            match unify(list_a[i].clone(), list_b[i].clone(), Ok(current_bindings)) {
+            match unify(&list_a[i], &list_b[i], Ok(current_bindings)) {
                 Ok(new_bindings) => current_bindings = new_bindings,
                 Err(msg) => return Err(msg)
             }
