@@ -101,7 +101,7 @@ fn unify_lists<T : Clone + Eq + Debug + Display>(list_a: &Vec<Expr<T>>, list_b: 
 }
 
 fn extend_bindings<T : Clone>(bindings: Bindings<T>, name: String, expr: Expr<T>) -> Bindings<T> {
-    let mut new_bindings = bindings.clone();
+    let mut new_bindings = bindings;
     new_bindings.insert(name, expr);
     return new_bindings;
 }
